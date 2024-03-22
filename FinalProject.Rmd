@@ -1,0 +1,62 @@
+---
+title: "Final_Project_Group_8"
+author: "Prashant Sharma"
+date: "2024-03-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# studentDataset = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-mat.csv", # sep = ";")
+
+studentDataset = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-por.csv", sep = ";")
+
+head(studentDataset)
+```
+
+
+```{r}
+studentPerformance_fm = lm(G3 ~ (school+sex+age+address+famsize+Pstatus+Medu+Fedu+Mjob+Fjob+reason+guardian+traveltime+studytime+
+                                   failures+schoolsup+famsup+activities+nursery+higher+internet+romantic+famrel+freetime+
+                                   goout+Dalc+Walc+health+absences), data = studentDataset)
+
+summary(studentPerformance_fm)
+```
+
+
+```{r}
+studentPerformance_p1 = lm(G3 ~ (sex+age+address+famsize+Pstatus+Medu+Fedu+traveltime+studytime+
+                                   failures+schoolsup+famsup+activities+higher+internet+romantic+famrel+freetime+
+                                   goout+Dalc+Walc+health+absences), data = studentDataset)
+
+summary(studentPerformance_p1)
+
+```
+
+
+```{r}
+subsets = ols_step_forward_p(studentPerformance_fm,p_val = 0.05, details = FALSE)
+forwardMdl = subsets$model
+summary(forwardMdl)
+```
+
+```{r}
+bestSubsetMdl = ols_step_best_subset(forwardMdl, details = FALSE)
+(bestSubsetMdl$metrics)
+```
+
+```{r}
+forwardMdl_int = lm(G3 ~ (failures+school+higher+studytime+schoolsup+Dalc+health+Fedu+sex)^2, data = studentDataset)
+summary(forwardMdl_int)
+```
+
+
+```{r}
+forwardMdl_int1 = lm(G3 ~ (failures+school+higher+studytime+schoolsup+Dalc+health+Fedu+sex+Dalc:Fedu), data = studentDataset)
+summary(forwardMdl_int1)
+```
+
