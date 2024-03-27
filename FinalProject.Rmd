@@ -8,6 +8,9 @@ output:
 urlcolor: blue
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
 
 
 # _Introduction_
@@ -97,28 +100,72 @@ $$
 \\
 $$
 
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-```
-
 ```{r eval=TRUE, echo=FALSE}
 # Library
 library(olsrr)
 ```
 
 
-```{r}
+```{r eval=TRUE, echo=FALSE}
 studentDataset = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-por.csv", sep = ";")
-
-head(studentDataset)
+# head(studentDataset, 3)
 ```
 
 
+
+# _Approach_
+
+Below is the outline of the steps we are going to perform in our analysis:
+
+1. First Build a full additive model.
+
+2. We will apply some model selection technique to come up with the best additive model.
+
+2. Based on p-value (assuming $\alpha = 0.05$) we will drop variable which are non-significant.
+
+3. Perform partial F-test to verify that dropped variables are indeed non-significant.
+
+4. Provide interpretation for the best additive model to predict our dependent variable (G3 - Final Grades).
+
+5. Based on our best additive model, we will check for interaction between the variables.
+
+6. Using p-value (assuming $\alpha = 0.05$), we will drop the non-significant interaction terms.
+
+7. Use partial F-test and analysis of Variance to verify the usability of our best interaction model.
+
+8. Provide interpretation of our best interaction model.
+
+9. Then we will check if we can include any higher order term in our model (Moving towards Higher order multiple regression model).
+
+10. Verify the significance of higher order terms using p-value (assuming $\alpha = 0.05$).
+
+11. Once we have done all our analysis we will try to define our best regression model (liner or higher order) to predict our dependent variable (G3 - Final Grades).
+
+12. Using our final regression model, we will start checking the regression assumptions.
+
+13. Linearity Assumption.
+
+14. Independence Assumption.
+
+15. Normality Assumption.
+
+16. Multi-collinearity.
+
+17. Outliers.
+
+$$
+\\
+$$
+
+
+
 ```{r}
-studentPerformance_fm = lm(G3 ~ (school+sex+age+address+famsize+Pstatus+Medu+Fedu+Mjob+Fjob+reason+guardian+traveltime+studytime+
-                                   failures+schoolsup+famsup+activities+nursery+higher+internet+romantic+famrel+freetime+
-                                   goout+Dalc+Walc+health+absences), data = studentDataset)
+studentPerformance_fm = lm(G3 ~(school+sex+age+address+famsize+Pstatus+Medu+
+                                  Fedu+Mjob+Fjob+reason+guardian+traveltime+studytime+
+                                  failures+schoolsup+famsup+activities+nursery+higher+internet+
+                                  romantic+famrel+freetime+
+                                  goout+Dalc+Walc+health+absences), 
+                           data = studentDataset)
 
 summary(studentPerformance_fm)
 ```
