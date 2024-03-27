@@ -283,3 +283,7 @@ plot(forwardMdl_int2,which=5)
 studentDataset[cooks.distance(forwardMdl_int2)>0.5,]
 ```
 
+```{r}
+plot(forwardMdl_int2,pch=18,col="red",which=c(4))
+```
+
