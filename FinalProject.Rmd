@@ -107,7 +107,10 @@ library(olsrr)
 
 
 ```{r eval=TRUE, echo=FALSE}
-studentDataset = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-por.csv", sep = ";")
+studentDataset_por = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-por.csv", sep = ";")
+studentDataset_mat = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-mat.csv", sep = ";")
+
+studentDataset = rbind(studentDataset_por, studentDataset_mat)
 # head(studentDataset, 3)
 ```
 
@@ -193,13 +196,84 @@ bestSubsetMdl = ols_step_best_subset(forwardMdl, details = FALSE)
 ```
 
 ```{r}
-forwardMdl_int = lm(G3 ~ (failures+school+higher+studytime+schoolsup+Dalc+health+Fedu+sex)^2, data = studentDataset)
+forwardMdl_int = lm(G3 ~ (failures+higher+schoolsup+studytime+romantic+goout+health+Mjob)^2, data = studentDataset)
 summary(forwardMdl_int)
 ```
 
 
 ```{r}
-forwardMdl_int1 = lm(G3 ~ (failures+school+higher+studytime+schoolsup+Dalc+health+Fedu+sex+Dalc:Fedu), data = studentDataset)
+forwardMdl_int1 = lm(G3 ~ (failures+higher+schoolsup+studytime+romantic+goout+health+Mjob+failures:Mjob+higher:Mjob+goout:Mjob), data = studentDataset)
 summary(forwardMdl_int1)
+```
+
+```{r}
+#Linearity Assumption
+
+
+ggplot(forwardMdl_int1, aes(x=.fitted, y=.resid)) +
+geom_point() +geom_smooth()+
+geom_hline(yintercept = 0)
+```
+
+```{r}
+# Equal Variance Assumption
+
+ggplot(forwardMdl_int1, aes(x=.fitted, y=.resid)) +
+geom_point(colour = "purple") +
+geom_hline(yintercept = 0) +
+geom_smooth(colour = "green4")+
+ggtitle("Residual plot: Residual vs Fitted values")
+```
+
+```{r}
+ggplot(forwardMdl_int1, aes(x=.fitted, y=sqrt(abs(.stdresid)))) +
+geom_point(colour = "purple") +
+geom_hline(yintercept = 0) +
+geom_smooth( colour = "green4")+
+ggtitle("Scale-Location plot : Standardized Residual vs Fitted values")
+```
+```{r}
+library(lmtest)
+
+bptest(forwardMdl_int1)  # It doesn't have heteroscedasticity.
+```
+
+```{r}
+# Normality Assumption
+
+ggplot(data=studentDataset, aes(residuals(forwardMdl_int1))) +
+geom_histogram(breaks = seq(-1,1,by=0.1), col="green3", fill="green4") +
+labs(title="Histogram for residuals") +
+labs(x="residuals", y="Count")
+```
+```{r}
+ggplot(studentDataset, aes(sample=forwardMdl_int1$residuals)) +
+stat_qq() +
+stat_qq_line()
+```
+```{r}
+#Testing for Normality  
+shapiro.test(residuals(forwardMdl_int1))  # We don't have normality
+```
+
+```{r}
+#Multicollinearity
+library(mctest) #for VIF
+imcdiag(forwardMdl_int1, method="VIF")
+```
+
+```{r}
+forwardMdl_int2 = lm(G3 ~ (failures+higher+schoolsup+studytime+romantic+goout+health+Mjob+failures:Mjob), data = studentDataset)
+summary(forwardMdl_int2)
+imcdiag(forwardMdl_int2, method="VIF")
+```
+
+```{r}
+# Outlier
+
+plot(forwardMdl_int2,which=5)
+```
+```{r}
+studentDataset[cooks.distance(forwardMdl_int2)>0.5,]
 ```
 
