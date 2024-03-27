@@ -258,7 +258,13 @@ shapiro.test(residuals(forwardMdl_int1))  # We don't have normality
 
 ```{r}
 #Multicollinearity
-library(mctest) #for VIF
+library(mctest)
+pairs(~G3+studytime+goout+health,data=studentDataset)
+```
+
+
+```{r}
+
 imcdiag(forwardMdl_int1, method="VIF")
 ```
 
