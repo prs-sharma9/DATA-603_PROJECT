@@ -114,7 +114,7 @@ studentDataset_por = read.csv("https://raw.githubusercontent.com/prs-sharma9/DAT
 studentDataset_mat = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-mat.csv", sep = ";")
 
 studentDataset = rbind(studentDataset_por, studentDataset_mat)
-# head(studentDataset, 3)
+head(studentDataset, 3)
 ```
 
 
@@ -257,8 +257,7 @@ summary(forwardMdl_int1)
 
 ```{r}
 #Linearity Assumption
-
-
+library(ggplot2)
 ggplot(forwardMdl_int1, aes(x=.fitted, y=.resid)) +
 geom_point() +geom_smooth()+
 geom_hline(yintercept = 0)
