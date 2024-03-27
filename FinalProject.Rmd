@@ -13,14 +13,22 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
 
-# _Introduction_
+```{r eval=TRUE, echo=FALSE}
+# Library
+library(olsrr)
+```
+
+# 1. _Introduction_
 
 In out final project for Data 603 - Statistical Modelling with Data, we have tried to develop a model to analyze the impact of various demographic and social factors on the performance of students. Academic performance, though it is not the only factor but is one of the crucial factors in shaping a student's future. To get into a good collage/university, student must score grades in school, a good college ca lead a better future and economic stability. So in order to secure good grades, getting into a great school is enough? Is there something more than a great school that can help a student to perform better? Do the social and demographic factors plays any role in student's performance? In our project we are trying to answer these question.
 
 To answer these questions we are working with a dataset that is collected at 2 Portuguese schools for Mathematics and Portuguese subject. This data is collected by using school reports and questionnaires. The data attribute include students grades, family size information, education level of parents, free time of student, any many other factors. By working on this project we are hoping to develop more understanding about the factors which can impact the performance of a student.
 
+$$
+\\
+$$
 
-# _Data_
+# 2. _Data_
 
 This data is from [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/dataset/320/student+performance). There are 649 rows instances and 30 features in the dataset. Below are details of each feature
 
@@ -90,20 +98,15 @@ This data is from [UC Irvine Machine Learning Repository](https://archive.ics.uc
 
 33. G3 - final grade (numeric: from 0 to 20, output target) [Quantitative]
 
-$$
-\\
-$$
 
 **G3 (Final grade) is the dependent variable for our model.**
 
+>NOTE: We need to convert the qualitative variable from numeric to string
+
 $$
 \\
 $$
 
-```{r eval=TRUE, echo=FALSE}
-# Library
-library(olsrr)
-```
 
 
 ```{r eval=TRUE, echo=FALSE}
@@ -116,7 +119,7 @@ studentDataset = rbind(studentDataset_por, studentDataset_mat)
 
 
 
-# _Approach_
+# _Methodology_
 
 Below is the outline of the steps we are going to perform in our analysis:
 
@@ -161,6 +164,17 @@ $$
 $$
 
 
+```{r eval=TRUE, echo=FALSE}
+# Reading data from github
+# studentDataset = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-por.csv", sep = ";")
+# head(studentDataset, 3)
+```
+
+Starting our analysis with building additive model, then we will try to include interaction terms and higher order terms in our model.
+
+## 3.1 _Full Additive Model_
+
+Creating full additive model: 
 
 ```{r}
 studentPerformance_fm = lm(G3 ~(school+sex+age+address+famsize+Pstatus+Medu+
@@ -172,15 +186,50 @@ studentPerformance_fm = lm(G3 ~(school+sex+age+address+famsize+Pstatus+Medu+
 
 summary(studentPerformance_fm)
 ```
+$$
+\\
+$$
+
+From the summary of the full model we can see that many of the variables are non-significant. We can apply some techniques for model selection to get significant parameters.
+
+
+## 3.2 _Model Selection_
+
+Using Stepwise model selection procedure to get the significant parameters:
+
+```{r}
+studentPerformance_stepwise=ols_step_both_p(studentPerformance_fm,p_enter = 0.1, p_remove = 0.3, details=FALSE)
+summary(studentPerformance_stepwise$model)
+```
+
+
+Getting best subset
+
+```{r}
+#ExecSubsets=ols_step_best_subset(studentPerformance_fm, details=TRUE)
+#ExecSubsets$metrics
+```
+
+
+# Appendix
+
+
+***
+
+$$
+END
+$$
+
+
 
 
 ```{r}
 studentPerformance_p1 = lm(G3 ~ (sex+age+address+famsize+Pstatus+Medu+Fedu+traveltime+studytime+
-                                   failures+schoolsup+famsup+activities+higher+internet+romantic+famrel+freetime+
-                                   goout+Dalc+Walc+health+absences), data = studentDataset)
+                                   failures+schoolsup+famsup+activities+higher+internet+romantic+
+                                   famrel+freetime+goout+Dalc+Walc+health+absences), 
+                           data = studentDataset)
 
 summary(studentPerformance_p1)
-
 ```
 
 
