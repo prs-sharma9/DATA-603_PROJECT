@@ -113,6 +113,34 @@ $$
 studentDataset_por = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-por.csv", sep = ";")
 studentDataset_mat = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-mat.csv", sep = ";")
 
+
+```
+
+```{r}
+studentDataset_por[which(studentDataset_por$Medu==1),7] = "one"
+studentDataset_por[which(studentDataset_por$traveltime==1),13] = "one"
+studentDataset_por[which(studentDataset_por$Fedu==1),8] = "one"
+studentDataset_por[which(studentDataset_por$studytime==1),14] = "one"
+studentDataset_por[which(studentDataset_por$famrel==1),24] = "one"
+studentDataset_por[which(studentDataset_por$freetime==1),25] = "one"
+studentDataset_por[which(studentDataset_por$goout==1),26] = "one"
+studentDataset_por[which(studentDataset_por$Walc==1),28] = "one"
+studentDataset_por[which(studentDataset_por$Dalc==1),27] = "one"
+studentDataset_por[which(studentDataset_por$health==1),29] = "one"
+
+studentDataset_mat[which(studentDataset_por$Medu==1),7] = "one"
+studentDataset_mat[which(studentDataset_por$traveltime==1),13] = "one"
+studentDataset_mat[which(studentDataset_por$Fedu==1),8] = "one"
+studentDataset_mat[which(studentDataset_por$studytime==1),14] = "one"
+studentDataset_mat[which(studentDataset_por$famrel==1),24] = "one"
+studentDataset_mat[which(studentDataset_por$freetime==1),25] = "one"
+studentDataset_mat[which(studentDataset_por$goout==1),26] = "one"
+studentDataset_mat[which(studentDataset_por$Walc==1),28] = "one"
+studentDataset_mat[which(studentDataset_por$Dalc==1),27] = "one"
+studentDataset_mat[which(studentDataset_por$health==1),29] = "one"
+
+# Combining Math and Por data set to create one dataframe
+
 studentDataset = rbind(studentDataset_por, studentDataset_mat)
 head(studentDataset, 3)
 ```
