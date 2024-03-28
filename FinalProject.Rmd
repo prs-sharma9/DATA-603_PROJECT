@@ -117,31 +117,23 @@ studentDataset_mat = read.csv("https://raw.githubusercontent.com/prs-sharma9/DAT
 ```
 
 ```{r}
-studentDataset_por[which(studentDataset_por$Medu==1),7] = "one"
-studentDataset_por[which(studentDataset_por$traveltime==1),13] = "one"
-studentDataset_por[which(studentDataset_por$Fedu==1),8] = "one"
-studentDataset_por[which(studentDataset_por$studytime==1),14] = "one"
-studentDataset_por[which(studentDataset_por$famrel==1),24] = "one"
-studentDataset_por[which(studentDataset_por$freetime==1),25] = "one"
-studentDataset_por[which(studentDataset_por$goout==1),26] = "one"
-studentDataset_por[which(studentDataset_por$Walc==1),28] = "one"
-studentDataset_por[which(studentDataset_por$Dalc==1),27] = "one"
-studentDataset_por[which(studentDataset_por$health==1),29] = "one"
-
-studentDataset_mat[which(studentDataset_mat$Medu==1),7] = "one"
-studentDataset_mat[which(studentDataset_mat$traveltime==1),13] = "one"
-studentDataset_mat[which(studentDataset_mat$Fedu==1),8] = "one"
-studentDataset_mat[which(studentDataset_mat$studytime==1),14] = "one"
-studentDataset_mat[which(studentDataset_mat$famrel==1),24] = "one"
-studentDataset_mat[which(studentDataset_mat$freetime==1),25] = "one"
-studentDataset_mat[which(studentDataset_mat$goout==1),26] = "one"
-studentDataset_mat[which(studentDataset_mat$Walc==1),28] = "one"
-studentDataset_mat[which(studentDataset_mat$Dalc==1),27] = "one"
-studentDataset_mat[which(studentDataset_mat$health==1),29] = "one"
 
 # Combining Math and Por data set to create one dataframe
 
 studentDataset = rbind(studentDataset_por, studentDataset_mat)
+
+studentDataset = rbind(studentDataset_por, studentDataset_mat)
+studentDataset$Medu= as.character(studentDataset$Medu)
+studentDataset$traveltime= as.character(studentDataset$traveltime)
+studentDataset$Fedu= as.character(studentDataset$Fedu)
+studentDataset$studytime= as.character(studentDataset$studytime)
+studentDataset$famrel= as.character(studentDataset$famrel)
+studentDataset$freetime= as.character(studentDataset$freetime)
+studentDataset$goout= as.character(studentDataset$goout)
+studentDataset$Walc= as.character(studentDataset$Walc)
+studentDataset$Dalc= as.character(studentDataset$Dalc)
+studentDataset$health= as.character(studentDataset$health)
+
 head(studentDataset, 3)
 ```
 
