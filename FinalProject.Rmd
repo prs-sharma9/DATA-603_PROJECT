@@ -265,15 +265,41 @@ bestSubsetMdl = ols_step_best_subset(forwardMdl, details = FALSE)
 ```
 
 ```{r}
-forwardMdl_int = lm(G3 ~ (failures+higher+schoolsup+studytime+romantic+goout+health+Mjob)^2, data = studentDataset)
+studentPerformance_p2 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Medu+Dalc+famsize+freetime+goout+health), 
+                           data = studentDataset)
+
+summary(studentPerformance_p2)
+```
+
+```{r}
+studentPerformance_p3 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+freetime+goout+health), 
+                           data = studentDataset)
+
+summary(studentPerformance_p3)
+```
+
+```{r}
+studentPerformance_p4 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health), 
+                           data = studentDataset)
+
+summary(studentPerformance_p4)
+```
+
+```{r}
+forwardMdl_int = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health)^2, data = studentDataset)
 summary(forwardMdl_int)
 ```
 
 
 ```{r}
-forwardMdl_int1 = lm(G3 ~ (failures+higher+schoolsup+studytime+romantic+goout+health+Mjob+failures:Mjob+higher:Mjob+goout:Mjob), data = studentDataset)
+forwardMdl_int1 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health+failures:schoolsup+higher:studytime+schoolsup:goout+schoolsup:health+school:studytime+school:goout+studytime:goout+studytime:health+Dalc:goout), data = studentDataset)
 summary(forwardMdl_int1)
 ```
+
+```{r}
+anova(studentPerformance_p4,forwardMdl_int1)
+```
+
 
 ```{r}
 #Linearity Assumption
@@ -310,7 +336,7 @@ bptest(forwardMdl_int1)  # It doesn't have heteroscedasticity.
 # Normality Assumption
 
 ggplot(data=studentDataset, aes(residuals(forwardMdl_int1))) +
-geom_histogram(breaks = seq(-1,1,by=0.1), col="green3", fill="green4") +
+geom_histogram(breaks = seq(-6,6,by=1), col="green3", fill="green4") +
 labs(title="Histogram for residuals") +
 labs(x="residuals", y="Count")
 ```
@@ -337,10 +363,59 @@ imcdiag(forwardMdl_int1, method="VIF")
 ```
 
 ```{r}
-forwardMdl_int2 = lm(G3 ~ (failures+higher+schoolsup+studytime+romantic+goout+health+Mjob+failures:Mjob), data = studentDataset)
+forwardMdl_int2 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health+failures:schoolsup+schoolsup:goout+schoolsup:health+school:studytime+school:goout+studytime:health), data = studentDataset)
 summary(forwardMdl_int2)
+```
+
+
+```{r}
 imcdiag(forwardMdl_int2, method="VIF")
 ```
+
+
+```{r}
+#Linearity Assumption
+library(ggplot2)
+ggplot(forwardMdl_int2, aes(x=.fitted, y=.resid)) +
+geom_point() +geom_smooth()+
+geom_hline(yintercept = 0)
+```
+```{r}
+ggplot(forwardMdl_int2, aes(x=.fitted, y=sqrt(abs(.stdresid)))) +
+geom_point(colour = "purple") +
+geom_hline(yintercept = 0) +
+geom_smooth( colour = "green4")+
+ggtitle("Scale-Location plot : Standardized Residual vs Fitted values")
+```
+```{r}
+library(lmtest)
+
+bptest(forwardMdl_int2)  # It doesn't have heteroscedasticity.
+```
+
+```{r}
+# Normality Assumption
+
+ggplot(data=studentDataset, aes(residuals(forwardMdl_int2))) +
+geom_histogram(breaks = seq(-5,5,by=1), col="green3", fill="green4") +
+labs(title="Histogram for residuals") +
+labs(x="residuals", y="Count")
+```
+```{r}
+ggplot(studentDataset, aes(sample=forwardMdl_int2$residuals)) +
+stat_qq() +
+stat_qq_line()
+```
+```{r}
+#Testing for Normality  
+shapiro.test(residuals(forwardMdl_int2))  # We don't have normality
+```
+```{r}
+qqnorm(studentDataset$G3)
+qqline(studentDataset$G3, col="red")
+
+```
+
 
 ```{r}
 # Outlier
