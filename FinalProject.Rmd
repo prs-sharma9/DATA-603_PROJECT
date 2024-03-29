@@ -16,6 +16,9 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```{r eval=TRUE, echo=FALSE}
 # Library
 library(olsrr)
+library(ggplot2)
+library(lmtest)
+library(mctest)
 ```
 
 # 1. _Introduction_
@@ -140,7 +143,7 @@ head(studentDataset, 3)
 
 
 
-# _Methodology_
+# 3. _Methodology_
 
 Below is the outline of the steps we are going to perform in our analysis:
 
@@ -259,7 +262,7 @@ $\widehat {G3}$ = 10.68826-1.82887(failures)+1.54720(higheryes)+0.26960(studytim
 
 # Add some comment
 
-## 3.2 _Interaction Model_
+## 3.3 _Interaction Model_
 
 Using our best additive model, we can check for interaction term:
 
@@ -280,13 +283,211 @@ Our interaction model will be:
 
 
 ```{r}
-student_performance_intMdl1 = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
+student_performance_intMdl2 = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
                                       +goout+failures:schoolsup+studytime:health+studytime:goout
                                       +schoolsup:health+schoolsup:goout), 
                                  data = studentDataset)
-summary(student_performance_intMdl1)
+summary(student_performance_intMdl2)
 ```
 
+
+## 3.4 _Comparing Additive and Interaction model_
+
+Comparing our additive and interaction models to see which one is better. To verify this we can use partial F-test using below hypothesis:
+
+
+$H_0$ : All the interaction coefficients are not significant
+$H_a$ : At least one of the interaction coefficient is significant
+
+
+
+```{r eval=TRUE, echo=FALSE}
+anove_addVsint = anova(student_performance_addMdl, student_performance_intMdl2)
+```
+
+
+| Source of variation | DF  |  Sum of Square  |  Mean Square  |  F-Statistic|
+|:-------------------:|:---:|:---------------:|:-------------:|:-----------:|
+|   Regression        | 33  |    740.32       |   22.43394    |  1.9433     |
+|   Residual          | 990 |    11429        |   11.54444    |             |
+|   Total             | 1023|    12169        |               |             |
+
+
+The p-value from our ANOVA test is **0.001228** which is less than our assumed $\alpha=0.05$ hence we can reject our $H_0$ and conclude that at least one of our interaction coefficient is significant, and 
+
+
+## 3.5. _Higher Order Model_
+
+Since we have finalized our interaction model, we can check if there are any variable (quantitative variable) for which we need to add higher order terms. For this analysis we will use pairs plot.
+In our final interaction model we have only one quantitative variable (i.e. failures).
+
+```{r}
+pairs(~G3 + failures, data = studentDataset, panel = panel.smooth)
+```
+
+
+Though there no clear visual indication that we should add higher order term for our variable, but we can still try by adding the higher order term and check the significance.
+
+```{r}
+student_performance_intMdl3 = lm(G3 ~ (failures+I(failures^2)+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
+                                      +goout+failures:schoolsup+studytime:health+studytime:goout
+                                      +schoolsup:health+schoolsup:goout), 
+                                 data = studentDataset)
+summary(student_performance_intMdl3)
+```
+
+
+$\widehat{G3}$ = 8.67068((Intercept)) -3.84533(failures) +0.757609(I(failures^2)) +1.49398(higheryes) 
+
+                      +2.5596(studytime2) +7.40096(studytime3) -1.7682(studytime4) +0.454711(schoolsupyes) 
+
+                      -0.786275(Dalc2) +0.106775(Dalc3) -1.37676(Dalc4) +0.209721(Dalc5) +0.779774(health2) 
+
+                      -0.904056(health3) +0.246689(health4) -0.438419(health5) -0.540209(romanticyes) 
+
+                      +0.595347(famsizeLE3) +2.62894(goout2) +2.09955(goout3) +2.32829(goout4) 
+
+                      +1.767(goout5) +1.46286(failures:schoolsupyes) -2.21384(studytime2:health2) 
+
+                      -1.49872(studytime3:health2) +0.227675(studytime4:health2) -0.570268(studytime2:health3) 
+
+                      -1.94258(studytime3:health3) -1.15228(studytime4:health3) -1.40046(studytime2:health4) 
+
+                      -2.73769(studytime3:health4) -2.13216(studytime4:health4) -0.62032(studytime2:health5) 
+
+                      -2.35092(studytime3:health5) -0.214397(studytime4:health5) -1.12391(studytime2:goout2) 
+
+                      -4.23562(studytime3:goout2) +4.98029(studytime4:goout2) -1.32132(studytime2:goout3) 
+
+                      -3.90003(studytime3:goout3) +3.37694(studytime4:goout3) -1.88884(studytime2:goout4) 
+
+                      -5.1949(studytime3:goout4) +1.88472(studytime4:goout4) -1.75839(studytime2:goout5) 
+
+                      -3.27269(studytime3:goout5) +2.39711(studytime4:goout5) +2.3211(schoolsupyes:health2) 
+
+                      +2.38419(schoolsupyes:health3) +2.93603(schoolsupyes:health4) +2.92593(schoolsupyes:health5) 
+
+                      -5.59801(schoolsupyes:goout2) -4.50439(schoolsupyes:goout3) -3.8287(schoolsupyes:goout4) 
+
+                      -5.54827(schoolsupyes:goout5)
+
+
+$$
+\\
+$$
+
+## 3.6 _Assumption Verification_
+
+Our model building process is based on some assumption about the data. Hence it is very important to verify that these assumption are met or not. If our data do not fit the assumptions then the model we developed cannot be used for prediction.
+
+### 3.6.1 Linearity Assumption
+
+The linear regression model we build is based on the assumption that their is a linear relation between predictors and response variable. To confirm the linear relation we can use Residula plot.
+
+
+```{r eval=TRUE, echo=FALSE}
+ggplot(student_performance_intMdl3, aes(x=.fitted, y=.resid)) +
+geom_point() +geom_smooth()+
+geom_hline(yintercept = 0)+
+ggtitle("Residual plot: Residual vs Fitted values")
+```
+
+>Comment: The residual vs fitted plot show a straight line which indicate that our linearity assumption is met.
+
+
+### 3.6.2 Equal Variance Assumption
+
+Another important assumption for our liner regression model is that the error term has a constant variance (**homoscedasticity**). To verify the homoscedasticity assumption we can again use the residual vs fitted plot and check if there is any patter.
+
+
+```{r eval=TRUE, echo=FALSE}
+ggplot(student_performance_intMdl3, aes(x=.fitted, y=.resid)) +
+geom_point(colour = "purple") +
+geom_hline(yintercept = 0) +
+geom_smooth(colour = "green4")+
+ggtitle("Residual plot: Residual vs Fitted values")
+```
+
+
+To confirm homoscedasticity we can perform the Breusch-Pagan Test (bptest) using below hypothesis:
+
+$H_0$ : Hetroscedasticity is not present (error term has comman variance)
+$H_a$ : Hetroscedasticity is present (error term do not have comman variance)
+
+
+```{r}
+bptest(student_performance_intMdl3)  # It doesn't have heteroscedasticity.
+```
+
+>Comment: Since the p-value is 0.3235 higher then our assumed $\alpha=0.05$ we cannot reject the $H_0$ and conclude that our model meets the assumption of common variance.
+
+
+### 3.6.3 Normality Assumption
+
+
+```{r eval=TRUE, echo=FALSE}
+require(gridExtra)
+
+p1=ggplot(data=studentDataset, aes(residuals(student_performance_intMdl3))) +
+geom_histogram(breaks = seq(-6,6,by=1), col="green3", fill="green4") +
+labs(title="Histogram for residuals") +
+labs(x="residuals", y="Count")
+
+p2=ggplot(studentDataset, aes(sample=student_performance_intMdl3$residuals)) +
+stat_qq() +
+stat_qq_line()+
+ggtitle("Q-Q Plot")
+
+grid.arrange(p1, p2, ncol=2)
+```
+
+
+
+```{r}
+shapiro.test(residuals(student_performance_intMdl3))  # We don't have normality
+```
+### 3.6.4 Independence Assumption
+
+Check if we need to add anything.
+
+### 3.6.5 Multicollinearity
+
+```{r}
+#finalMdl = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
+#                                      +goout+failures:schoolsup+studytime:health+studytime:goout
+#                                      +schoolsup:health+schoolsup:goout), 
+#                                 data = studentDataset)
+
+#finalMdl = lm(G3 ~ (failures+higher+schoolsup+Dalc+health+romantic+famsize+
+#                                      +goout+failures:schoolsup+schoolsup:health+schoolsup:goout), 
+#                                data = studentDataset)
+
+finalMdl = lm(G3 ~ (failures+higher+schoolsup+Dalc+health+romantic+famsize+
+                                      +goout+studytime), 
+                                 data = studentDataset)
+imcdiag(finalMdl, method="VIF")
+summary(finalMdl)
+```
+
+
+### 3.6.6 Outlier
+
+```{r}
+plot(student_performance_intMdl3,which=5)
+
+studentDataset[cooks.distance(student_performance_intMdl3)>0.5,]
+```
+
+
+
+# 4. _Conclusion_
+
+state final model
+give interpretation
+
+# 5. _Discussion_
+
+Future course of action
 
 
 # Appendix
@@ -357,6 +558,9 @@ summary(forwardMdl_int1)
 ```{r}
 anova(studentPerformance_p4,forwardMdl_int1)
 ```
+
+
+### Assumption code
 
 
 ```{r}
@@ -516,6 +720,57 @@ formula <- function(model,dep){
 formula(student_performance_intMdl1,'G3')
 
 
+
+```{r}
+
+fanyi <- function(model,dep) {
+
+    coe=coefficients(model)
+
+    for(a in names(coe)){
+
+      if (coe[a]>0){
+
+        print(paste('For one unit increases in ',a,' ',dep,' increases by ', signif(coe[a])))
+
+      }else{
+
+        print(paste('For one unit increases in ',a,' ',dep,' decreases by ', signif(-1*coe[a])))
+
+      }
+
+    }
+
+} 
+
+fanyi(studentPerformance_fm,'the grade of student')
+
+formula <- function(model,dep){
+
+  coe=coefficients(model)
+
+  b=paste(dep,'=')
+
+  for(a in names(coe)){
+
+    if (coe[a]>0){
+
+      b=paste(b,' +',signif(coe[a]),'(',a,')',sep="")
+
+    }else{
+
+      b=paste(b,' ',signif(coe[a]),'(',a,')',sep="")
+
+    }
+
+  }
+
+  print(b)
+
+}
+
+formula(student_performance_intMdl3,'G3')
+
 ```
-$\widehat {G3}$ = +8.4988((Intercept)) -2.04631(failures) +1.57161(higheryes) +2.62907(studytime2) +7.11035(studytime3)                       -1.77507(studytime4) +0.776582(schoolsupyes) -0.818135(Dalc2) +0.00895213(Dalc3) -1.64225(Dalc4)                       +0.318271(Dalc5) +0.533736(health2) -0.86224(health3) +0.376706(health4) -0.468239(health5)                       -0.601559(romanticyes) +0.611245(famsizeLE3) +2.70141(goout2) +2.12068(goout3) +2.27082(goout4)                       +1.91058(goout5) +1.47046(failures:schoolsupyes) -1.99574(studytime2:health2) -1.34224(studytime3:health2)                       +0.633159(studytime4:health2) -0.720734(studytime2:health3) -2.05011(studytime3:health3)                       -1.20916(studytime4:health3) -1.58665(studytime2:health4) -2.86879(studytime3:health4)                       -2.21219(studytime4:health4) -0.677095(studytime2:health5) -2.41672(studytime3:health5)                       -0.130447(studytime4:health5) -1.11796(studytime2:goout2) -3.99634(studytime3:goout2)                       +4.91206(studytime4:goout2) -1.31923(studytime2:goout3) -3.49515(studytime3:goout3)                       +3.47264(studytime4:goout3) -1.84209(studytime2:goout4) -4.74836(studytime3:goout4)                       +1.98664(studytime4:goout4) -1.77022(studytime2:goout5) -2.9117(studytime3:goout5)                       +2.18112(studytime4:goout5) +2.21468(schoolsupyes:health2) +2.45058(schoolsupyes:health3)                       +2.76882(schoolsupyes:health4) +2.84951(schoolsupyes:health5) -5.90158(schoolsupyes:goout2)                       -4.80888(schoolsupyes:goout3) -4.13525(schoolsupyes:goout4) -5.86625(schoolsupyes:goout5)
- 
+
+
