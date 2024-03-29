@@ -110,19 +110,20 @@ $$
 
 
 ```{r eval=TRUE, echo=FALSE}
+
+# Code to merge student-por.csv and student-mat.csv
+
 studentDataset_por = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-por.csv", sep = ";")
 studentDataset_mat = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-mat.csv", sep = ";")
 
-
+studentDataset = rbind(studentDataset_por, studentDataset_mat)
+studentDataset = rbind(studentDataset_por, studentDataset_mat)
 ```
 
 ```{r}
 
-# Combining Math and Por data set to create one dataframe
+# Converting the data type of factor variable from int to char
 
-studentDataset = rbind(studentDataset_por, studentDataset_mat)
-
-studentDataset = rbind(studentDataset_por, studentDataset_mat)
 studentDataset$Medu= as.character(studentDataset$Medu)
 studentDataset$traveltime= as.character(studentDataset$traveltime)
 studentDataset$Fedu= as.character(studentDataset$Fedu)
@@ -183,13 +184,6 @@ $$
 \\
 $$
 
-
-```{r eval=TRUE, echo=FALSE}
-# Reading data from github
-# studentDataset = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-por.csv", sep = ";")
-# head(studentDataset, 3)
-```
-
 Starting our analysis with building additive model, then we will try to include interaction terms and higher order terms in our model.
 
 ## 3.1 _Full Additive Model_
@@ -206,29 +200,93 @@ studentPerformance_fm = lm(G3 ~(school+sex+age+address+famsize+Pstatus+Medu+
 
 summary(studentPerformance_fm)
 ```
+
+
+
 $$
 \\
 $$
 
-From the summary of the full model we can see that many of the variables are non-significant. We can apply some techniques for model selection to get significant parameters.
+_Comments:_ From the summary of the full model we can see that many of the variables are non-significant. We can apply some techniques for model selection to get significant parameters.
 
 
 ## 3.2 _Model Selection_
 
-Using Stepwise model selection procedure to get the significant parameters:
+Using Stepwise forward selection procedure to get the significant parameters:
+
+$$
+\\
+$$
+
 
 ```{r}
-studentPerformance_stepwise=ols_step_both_p(studentPerformance_fm,p_enter = 0.1, p_remove = 0.3, details=FALSE)
-summary(studentPerformance_stepwise$model)
+studentPerformance_Forward_subsets = ols_step_forward_p(studentPerformance_fm,p_val = 0.05, details = FALSE)
+student_performance_forwardMdl = studentPerformance_Forward_subsets$model
+summary(student_performance_forwardMdl)
+#studentPerformance_Forward_subsets$metric
 ```
 
 
-Getting best subset
+
+>Using the result of forward selection process and dropping non-significant variables, the best additive model is:
+
 
 ```{r}
-#ExecSubsets=ols_step_best_subset(studentPerformance_fm, details=TRUE)
-#ExecSubsets$metrics
+student_performance_addMdl = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
+                                      +goout), data = studentDataset)
+summary(student_performance_addMdl)
 ```
+
+
+$$
+\\
+$$
+
+**Our best additive model:**
+
+
+$\widehat {G3}$ = 10.68826-1.82887(failures)+1.54720(higheryes)+0.26960(studytime2)+1.18603(studytime3)
+
+                      +0.62526(studytime4)-1.16127(schoolsupyes)-0.73721(Dalc2)-0.14301(Dalc3)
+
+                      -1.65491(Dalc4)+0.11089(Dalc5)-0.66440(health2)-1.21726(health3)-0.74820(health4)
+
+                      -0.99991(health5)-0.59306(romanticyes)+0.48561(famsizeLE3)+1.15597(goout2)+0.67978(goout3)+0.38442(goout4)
+
+                      +0.08698(goout5)
+
+
+
+# Add some comment
+
+## 3.2 _Interaction Model_
+
+Using our best additive model, we can check for interaction term:
+
+```{r}
+student_performance_intMdl1 = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
+                                      +goout)^2, data = studentDataset)
+summary(student_performance_intMdl1)
+```
+
+$$
+\\
+$$
+
+In the summary of our full interaction model the interaction term _Dacl:goout and studytime:Dacl_ has some NA entries, it simply mean that there is not enough data to generate values for those interaction. So we will drop these interaction completely.
+
+
+Our interaction model will be:
+
+
+```{r}
+student_performance_intMdl1 = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
+                                      +goout+failures:schoolsup+studytime:health+studytime:goout
+                                      +schoolsup:health+schoolsup:goout), 
+                                 data = studentDataset)
+summary(student_performance_intMdl1)
+```
+
 
 
 # Appendix
