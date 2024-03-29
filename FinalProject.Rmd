@@ -353,13 +353,12 @@ shapiro.test(residuals(forwardMdl_int1))  # We don't have normality
 ```{r}
 #Multicollinearity
 library(mctest)
-pairs(~G3+studytime+goout+health,data=studentDataset)
+#pairs(~G3+studytime+goout+health,data=studentDataset)
 ```
 
 
 ```{r}
-
-imcdiag(forwardMdl_int1, method="VIF")
+imcdiag(studentPerformance_fm, method="VIF")
 ```
 
 ```{r}
@@ -369,6 +368,7 @@ summary(forwardMdl_int2)
 
 
 ```{r}
+
 imcdiag(forwardMdl_int2, method="VIF")
 ```
 
@@ -429,4 +429,21 @@ studentDataset[cooks.distance(forwardMdl_int2)>0.5,]
 ```{r}
 plot(forwardMdl_int2,pch=18,col="red",which=c(4))
 ```
+```{r}
+fanyi <- function(model,dep) {
+    coe=coefficients(model)
+    for(a in names(coe)){
+      if (coe[a]>0){
+        print(paste('For one unit increases in ',a,' ',dep,' increases by ', signif(coe[a])))
+      }else{
+        print(paste('For one unit increases in ',a,' ',dep,' decreases by ', signif(-1*coe[a])))
+      }
+      
+    }
+} 
+fanyi(studentPerformance_fm,'the grade of student')
+ 
+
+```
+
 
