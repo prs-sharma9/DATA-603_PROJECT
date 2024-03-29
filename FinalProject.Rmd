@@ -500,8 +500,22 @@ fanyi <- function(model,dep) {
     }
 } 
 fanyi(studentPerformance_fm,'the grade of student')
- 
+formula <- function(model,dep){
+  coe=coefficients(model)
+  b=paste(dep,'=')
+  for(a in names(coe)){
+    if (coe[a]>0){
+      b=paste(b,' +',signif(coe[a]),'(',a,')',sep="")
+    }else{
+      b=paste(b,' ',signif(coe[a]),'(',a,')',sep="")
+    }
+    
+  }
+  print(b)
+}
+formula(student_performance_intMdl1,'G3')
+
 
 ```
-
-
+$\widehat {G3}$ = +8.4988((Intercept)) -2.04631(failures) +1.57161(higheryes) +2.62907(studytime2) +7.11035(studytime3)                       -1.77507(studytime4) +0.776582(schoolsupyes) -0.818135(Dalc2) +0.00895213(Dalc3) -1.64225(Dalc4)                       +0.318271(Dalc5) +0.533736(health2) -0.86224(health3) +0.376706(health4) -0.468239(health5)                       -0.601559(romanticyes) +0.611245(famsizeLE3) +2.70141(goout2) +2.12068(goout3) +2.27082(goout4)                       +1.91058(goout5) +1.47046(failures:schoolsupyes) -1.99574(studytime2:health2) -1.34224(studytime3:health2)                       +0.633159(studytime4:health2) -0.720734(studytime2:health3) -2.05011(studytime3:health3)                       -1.20916(studytime4:health3) -1.58665(studytime2:health4) -2.86879(studytime3:health4)                       -2.21219(studytime4:health4) -0.677095(studytime2:health5) -2.41672(studytime3:health5)                       -0.130447(studytime4:health5) -1.11796(studytime2:goout2) -3.99634(studytime3:goout2)                       +4.91206(studytime4:goout2) -1.31923(studytime2:goout3) -3.49515(studytime3:goout3)                       +3.47264(studytime4:goout3) -1.84209(studytime2:goout4) -4.74836(studytime3:goout4)                       +1.98664(studytime4:goout4) -1.77022(studytime2:goout5) -2.9117(studytime3:goout5)                       +2.18112(studytime4:goout5) +2.21468(schoolsupyes:health2) +2.45058(schoolsupyes:health3)                       +2.76882(schoolsupyes:health4) +2.84951(schoolsupyes:health5) -5.90158(schoolsupyes:goout2)                       -4.80888(schoolsupyes:goout3) -4.13525(schoolsupyes:goout4) -5.86625(schoolsupyes:goout5)
+ 
