@@ -19,6 +19,7 @@ library(olsrr)
 library(ggplot2)
 library(lmtest)
 library(mctest)
+library(broom)
 ```
 
 # 1. _Introduction_
@@ -114,16 +115,13 @@ $$
 
 ```{r eval=TRUE, echo=FALSE}
 
-# Code to merge student-por.csv and student-mat.csv
+# Code to read and merge student-por.csv and student-mat.csv
 
 studentDataset_por = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-por.csv", sep = ";")
 studentDataset_mat = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-mat.csv", sep = ";")
 
 studentDataset = rbind(studentDataset_por, studentDataset_mat)
 studentDataset = rbind(studentDataset_por, studentDataset_mat)
-```
-
-```{r}
 
 # Converting the data type of factor variable from int to char
 
@@ -138,8 +136,10 @@ studentDataset$Walc= as.character(studentDataset$Walc)
 studentDataset$Dalc= as.character(studentDataset$Dalc)
 studentDataset$health= as.character(studentDataset$health)
 
-head(studentDataset, 3)
+#head(studentDataset, 3)
 ```
+
+
 
 
 
@@ -191,7 +191,11 @@ Starting our analysis with building additive model, then we will try to include 
 
 ## 3.1 _Full Additive Model_
 
+&nbsp;
+
 Creating full additive model: 
+
+&nbsp;
 
 ```{r}
 studentPerformance_fm = lm(G3 ~(school+sex+age+address+famsize+Pstatus+Medu+
@@ -204,25 +208,22 @@ studentPerformance_fm = lm(G3 ~(school+sex+age+address+famsize+Pstatus+Medu+
 #summary(studentPerformance_fm)
 ```
 
+&nbsp;
 
 > **NOTE:** Refer Appendix 1 for summary of full addtive model 
 
-
-$$
-\\
-$$
+&nbsp;
 
 _Comments:_ From the summary of the full model we can see that many of the variables are non-significant. We can apply some techniques for model selection to get significant parameters.
 
 
 ## 3.2 _Model Selection_
 
+&nbsp;
+
 Using Stepwise forward selection procedure to get the significant parameters:
 
-$$
-\\
-$$
-
+&nbsp;
 
 ```{r}
 studentPerformance_Forward_subsets = ols_step_forward_p(studentPerformance_fm,p_val = 0.05, details = FALSE)
@@ -231,10 +232,11 @@ summary(student_performance_forwardMdl)
 #studentPerformance_Forward_subsets$metric
 ```
 
-
+&nbsp;
 
 >Using the result of forward selection process and dropping non-significant variables, the best additive model is:
 
+&nbsp;
 
 ```{r}
 student_performance_addMdl = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
@@ -242,13 +244,11 @@ student_performance_addMdl = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+h
 summary(student_performance_addMdl)
 ```
 
-
-$$
-\\
-$$
+&nbsp;
 
 **Our best additive model:**
 
+&nbsp;
 
 $\widehat {G3}$ = 10.68826-1.82887(failures)+1.54720(higheryes)+0.26960(studytime2)+1.18603(studytime3)
 
@@ -260,42 +260,49 @@ $\widehat {G3}$ = 10.68826-1.82887(failures)+1.54720(higheryes)+0.26960(studytim
 
                       +0.08698(goout5)
 
-
+&nbsp;
 
 # Add some comment
 
 ## 3.3 _Interaction Model_
 
+&nbsp;
+
 Using our best additive model, we can check for interaction term:
+
+&nbsp;
 
 ```{r}
 student_performance_intMdl1 = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
                                       +goout)^2, data = studentDataset)
-#summary(student_performance_intMdl1)
+summary_intMdl1 = summary(student_performance_intMdl1)
 ```
 
+&nbsp;
 
 >**NOTE:** Refer Appendix 2 for summary of the interaction model
 
-
-$$
-\\
-$$
+&nbsp;
 
 In the summary of our full interaction model the interaction term _Dacl:goout and studytime:Dacl_ has some NA entries, it simply mean that there is not enough data to generate values for those interaction. So we will drop these interaction completely.
 
 
 Our interaction model will be:
 
+&nbsp;
 
 ```{r}
 student_performance_intMdl2 = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
                                       +goout+failures:schoolsup+studytime:health+studytime:goout
                                       +schoolsup:health+schoolsup:goout), 
                                  data = studentDataset)
-#summary(student_performance_intMdl2)
+summary_intMdl2 = summary(student_performance_intMdl2)
+tidy_fit_intMdl2 <- tidy(student_performance_intMdl2)
+sigCoeff_intMdl2 = tidy_fit_intMdl2$term[tidy_fit_intMdl2$p.value<0.05]
+sigCoeff_intMdl2
 ```
 
+&nbsp;
 
 >**NOTE:** Refer Appendix 3 for summary of final interaction model.
 
@@ -304,16 +311,19 @@ student_performance_intMdl2 = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+
 
 Comparing our additive and interaction models to see which one is better. To verify this we can use partial F-test using below hypothesis:
 
+&nbsp;
 
 $H_0$ : All the interaction coefficients are not significant
 $H_a$ : At least one of the interaction coefficient is significant
 
-
+&nbsp;
 
 ```{r eval=TRUE, echo=FALSE}
-anove_addVsint = anova(student_performance_addMdl, student_performance_intMdl2)
+anova_addVsint = anova(student_performance_addMdl, student_performance_intMdl2)
+anova_addVsint
 ```
 
+&nbsp;
 
 | Source of variation | DF  |  Sum of Square  |  Mean Square  |  F-Statistic|
 |:-------------------:|:---:|:---------------:|:-------------:|:-----------:|
@@ -321,6 +331,7 @@ anove_addVsint = anova(student_performance_addMdl, student_performance_intMdl2)
 |   Residual          | 990 |    11429        |   11.54444    |             |
 |   Total             | 1023|    12169        |               |             |
 
+&nbsp;
 
 The p-value from our ANOVA test is **0.001228** which is less than our assumed $\alpha=0.05$ hence we can reject our $H_0$ and conclude that at least one of our interaction coefficient is significant, and 
 
@@ -330,21 +341,31 @@ The p-value from our ANOVA test is **0.001228** which is less than our assumed $
 Since we have finalized our interaction model, we can check if there are any variable (quantitative variable) for which we need to add higher order terms. For this analysis we will use pairs plot.
 In our final interaction model we have only one quantitative variable (i.e. failures).
 
+&nbsp;
+
 ```{r}
 pairs(~G3 + failures, data = studentDataset, panel = panel.smooth)
 ```
 
+&nbsp;
 
 Though there no clear visual indication that we should add higher order term for our variable, but we can still try by adding the higher order term and check the significance.
 
+&nbsp;
+
 ```{r}
-student_performance_intMdl3 = lm(G3 ~ (failures+I(failures^2)+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
+student_performance_hMdl1 = lm(G3 ~ (failures+I(failures^2)+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
                                       +goout+failures:schoolsup+studytime:health+studytime:goout
                                       +schoolsup:health+schoolsup:goout), 
                                  data = studentDataset)
-summary(student_performance_intMdl3)
+summary_hMdl1 = summary(student_performance_hMdl1)
+tidy_fit_hMdl1 <- tidy(student_performance_hMdl1)
+sigCoeff_hMdl1 = tidy_fit_hMdl1$term[tidy_fit_hMdl1$p.value<0.05]
+sigCoeff_hMdl1
+
 ```
 
+&nbsp;
 
 $\widehat{G3}$ = 8.67068((Intercept)) -3.84533(failures) +0.757609(I(failures^2)) +1.49398(higheryes) 
 
@@ -380,10 +401,6 @@ $\widehat{G3}$ = 8.67068((Intercept)) -3.84533(failures) +0.757609(I(failures^2)
 
                       -5.54827(schoolsupyes:goout5)
 
-
-$$
-\\
-$$
 
 ## 3.6 _Assumption Verification_
 
@@ -428,7 +445,7 @@ $H_a$ : Hetroscedasticity is present (error term do not have comman variance)
 bptest(student_performance_intMdl3)  # It doesn't have heteroscedasticity.
 ```
 
->Comment: Since the p-value is 0.3235 higher then our assumed $\alpha=0.05$ we cannot reject the $H_0$ and conclude that our model meets the assumption of common variance.
+>Comment: Since the p-value is 0.3235 which is higher then our assumed $\alpha=0.05$ we cannot reject the $H_0$ and conclude that our model meets the assumption of common variance.
 
 
 ### 3.6.3 Normality Assumption
@@ -455,6 +472,14 @@ grid.arrange(p1, p2, ncol=2)
 ```{r}
 shapiro.test(residuals(student_performance_intMdl3))  # We don't have normality
 ```
+
+&nbsp;
+
+>Comment: Since the p-value is 2.2e-16 which is lower then our assumed $\alpha=0.05$ we should reject the $H_0$ and conclude that our model do not have normal distribution of error term and do not meet normality assumption.
+
+
+
+
 ### 3.6.4 Independence Assumption
 
 Check if we need to add anything.
@@ -512,14 +537,21 @@ summary(studentPerformance_fm)
 ### 2. Summary of interaction model: 
 
 ```{r}
-summary(student_performance_intMdl1)
+summary_intMdl1
 ```
 
 
 ### 3. Summary of final interaction model:
 
 ```{r}
-summary(student_performance_intMdl2)
+summary_intMdl2
+```
+
+
+### 3. Summary of higer order model:
+
+```{r}
+summary_hMdl1
 ```
 
 
