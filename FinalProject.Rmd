@@ -19,7 +19,6 @@ library(olsrr)
 library(ggplot2)
 library(lmtest)
 library(mctest)
-library(broom)
 ```
 
 # 1. _Introduction_
@@ -115,13 +114,16 @@ $$
 
 ```{r eval=TRUE, echo=FALSE}
 
-# Code to read and merge student-por.csv and student-mat.csv
+# Code to merge student-por.csv and student-mat.csv
 
 studentDataset_por = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-por.csv", sep = ";")
 studentDataset_mat = read.csv("https://raw.githubusercontent.com/prs-sharma9/DATA-603_PROJECT/main/dataset/student-mat.csv", sep = ";")
 
 studentDataset = rbind(studentDataset_por, studentDataset_mat)
 studentDataset = rbind(studentDataset_por, studentDataset_mat)
+```
+
+```{r}
 
 # Converting the data type of factor variable from int to char
 
@@ -136,10 +138,8 @@ studentDataset$Walc= as.character(studentDataset$Walc)
 studentDataset$Dalc= as.character(studentDataset$Dalc)
 studentDataset$health= as.character(studentDataset$health)
 
-#head(studentDataset, 3)
+head(studentDataset, 3)
 ```
-
-
 
 
 
@@ -191,11 +191,7 @@ Starting our analysis with building additive model, then we will try to include 
 
 ## 3.1 _Full Additive Model_
 
-&nbsp;
-
 Creating full additive model: 
-
-&nbsp;
 
 ```{r}
 studentPerformance_fm = lm(G3 ~(school+sex+age+address+famsize+Pstatus+Medu+
@@ -205,25 +201,30 @@ studentPerformance_fm = lm(G3 ~(school+sex+age+address+famsize+Pstatus+Medu+
                                   goout+Dalc+Walc+health+absences), 
                            data = studentDataset)
 
-#summary(studentPerformance_fm)
+summary(studentPerformance_fm)
 ```
 
-&nbsp;
+```{r}
+# Multicolinearity Test
+imcdiag(studentPerformance_fm, method="VIF")
+```
 
-> **NOTE:** Refer Appendix 1 for summary of full addtive model 
 
-&nbsp;
+$$
+\\
+$$
 
 _Comments:_ From the summary of the full model we can see that many of the variables are non-significant. We can apply some techniques for model selection to get significant parameters.
 
 
 ## 3.2 _Model Selection_
 
-&nbsp;
-
 Using Stepwise forward selection procedure to get the significant parameters:
 
-&nbsp;
+$$
+\\
+$$
+
 
 ```{r}
 studentPerformance_Forward_subsets = ols_step_forward_p(studentPerformance_fm,p_val = 0.05, details = FALSE)
@@ -232,11 +233,10 @@ summary(student_performance_forwardMdl)
 #studentPerformance_Forward_subsets$metric
 ```
 
-&nbsp;
+
 
 >Using the result of forward selection process and dropping non-significant variables, the best additive model is:
 
-&nbsp;
 
 ```{r}
 student_performance_addMdl = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
@@ -244,11 +244,13 @@ student_performance_addMdl = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+h
 summary(student_performance_addMdl)
 ```
 
-&nbsp;
+
+$$
+\\
+$$
 
 **Our best additive model:**
 
-&nbsp;
 
 $\widehat {G3}$ = 10.68826-1.82887(failures)+1.54720(higheryes)+0.26960(studytime2)+1.18603(studytime3)
 
@@ -260,70 +262,53 @@ $\widehat {G3}$ = 10.68826-1.82887(failures)+1.54720(higheryes)+0.26960(studytim
 
                       +0.08698(goout5)
 
-&nbsp;
+
 
 # Add some comment
 
 ## 3.3 _Interaction Model_
 
-&nbsp;
-
 Using our best additive model, we can check for interaction term:
-
-&nbsp;
 
 ```{r}
 student_performance_intMdl1 = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
                                       +goout)^2, data = studentDataset)
-summary_intMdl1 = summary(student_performance_intMdl1)
+summary(student_performance_intMdl1)
 ```
 
-&nbsp;
-
->**NOTE:** Refer Appendix 2 for summary of the interaction model
-
-&nbsp;
+$$
+\\
+$$
 
 In the summary of our full interaction model the interaction term _Dacl:goout and studytime:Dacl_ has some NA entries, it simply mean that there is not enough data to generate values for those interaction. So we will drop these interaction completely.
 
 
 Our interaction model will be:
 
-&nbsp;
 
 ```{r}
 student_performance_intMdl2 = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
                                       +goout+failures:schoolsup+studytime:health+studytime:goout
                                       +schoolsup:health+schoolsup:goout), 
                                  data = studentDataset)
-summary_intMdl2 = summary(student_performance_intMdl2)
-tidy_fit_intMdl2 <- tidy(student_performance_intMdl2)
-sigCoeff_intMdl2 = tidy_fit_intMdl2$term[tidy_fit_intMdl2$p.value<0.05]
-sigCoeff_intMdl2
+summary(student_performance_intMdl2)
 ```
-
-&nbsp;
-
->**NOTE:** Refer Appendix 3 for summary of final interaction model.
 
 
 ## 3.4 _Comparing Additive and Interaction model_
 
 Comparing our additive and interaction models to see which one is better. To verify this we can use partial F-test using below hypothesis:
 
-&nbsp;
 
 $H_0$ : All the interaction coefficients are not significant
 $H_a$ : At least one of the interaction coefficient is significant
 
-&nbsp;
+
 
 ```{r eval=TRUE, echo=FALSE}
-anova_addVsint = anova(student_performance_addMdl, student_performance_intMdl2)
-anova_addVsint
+anove_addVsint = anova(student_performance_addMdl, student_performance_intMdl2)
 ```
 
-&nbsp;
 
 | Source of variation | DF  |  Sum of Square  |  Mean Square  |  F-Statistic|
 |:-------------------:|:---:|:---------------:|:-------------:|:-----------:|
@@ -331,7 +316,6 @@ anova_addVsint
 |   Residual          | 990 |    11429        |   11.54444    |             |
 |   Total             | 1023|    12169        |               |             |
 
-&nbsp;
 
 The p-value from our ANOVA test is **0.001228** which is less than our assumed $\alpha=0.05$ hence we can reject our $H_0$ and conclude that at least one of our interaction coefficient is significant, and 
 
@@ -341,31 +325,21 @@ The p-value from our ANOVA test is **0.001228** which is less than our assumed $
 Since we have finalized our interaction model, we can check if there are any variable (quantitative variable) for which we need to add higher order terms. For this analysis we will use pairs plot.
 In our final interaction model we have only one quantitative variable (i.e. failures).
 
-&nbsp;
-
 ```{r}
 pairs(~G3 + failures, data = studentDataset, panel = panel.smooth)
 ```
 
-&nbsp;
 
 Though there no clear visual indication that we should add higher order term for our variable, but we can still try by adding the higher order term and check the significance.
 
-&nbsp;
-
 ```{r}
-student_performance_hMdl1 = lm(G3 ~ (failures+I(failures^2)+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
+student_performance_intMdl3 = lm(G3 ~ (failures+I(failures^2)+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
                                       +goout+failures:schoolsup+studytime:health+studytime:goout
                                       +schoolsup:health+schoolsup:goout), 
                                  data = studentDataset)
-summary_hMdl1 = summary(student_performance_hMdl1)
-tidy_fit_hMdl1 <- tidy(student_performance_hMdl1)
-sigCoeff_hMdl1 = tidy_fit_hMdl1$term[tidy_fit_hMdl1$p.value<0.05]
-sigCoeff_hMdl1
-
+summary(student_performance_intMdl3)
 ```
 
-&nbsp;
 
 $\widehat{G3}$ = 8.67068((Intercept)) -3.84533(failures) +0.757609(I(failures^2)) +1.49398(higheryes) 
 
@@ -401,6 +375,10 @@ $\widehat{G3}$ = 8.67068((Intercept)) -3.84533(failures) +0.757609(I(failures^2)
 
                       -5.54827(schoolsupyes:goout5)
 
+
+$$
+\\
+$$
 
 ## 3.6 _Assumption Verification_
 
@@ -445,7 +423,7 @@ $H_a$ : Hetroscedasticity is present (error term do not have comman variance)
 bptest(student_performance_intMdl3)  # It doesn't have heteroscedasticity.
 ```
 
->Comment: Since the p-value is 0.3235 which is higher then our assumed $\alpha=0.05$ we cannot reject the $H_0$ and conclude that our model meets the assumption of common variance.
+>Comment: Since the p-value is 0.3235 higher then our assumed $\alpha=0.05$ we cannot reject the $H_0$ and conclude that our model meets the assumption of common variance.
 
 
 ### 3.6.3 Normality Assumption
@@ -472,14 +450,6 @@ grid.arrange(p1, p2, ncol=2)
 ```{r}
 shapiro.test(residuals(student_performance_intMdl3))  # We don't have normality
 ```
-
-&nbsp;
-
->Comment: Since the p-value is 2.2e-16 which is lower then our assumed $\alpha=0.05$ we should reject the $H_0$ and conclude that our model do not have normal distribution of error term and do not meet normality assumption.
-
-
-
-
 ### 3.6.4 Independence Assumption
 
 Check if we need to add anything.
@@ -527,36 +497,6 @@ Future course of action
 # Appendix
 
 
-### 1. Summary Full additive Model:
-
-```{r}
-summary(studentPerformance_fm)
-```
-
-
-### 2. Summary of interaction model: 
-
-```{r}
-summary_intMdl1
-```
-
-
-### 3. Summary of final interaction model:
-
-```{r}
-summary_intMdl2
-```
-
-
-### 3. Summary of higer order model:
-
-```{r}
-summary_hMdl1
-```
-
-
-
-
 ***
 
 $$
@@ -567,60 +507,60 @@ $$
 
 
 ```{r}
-#studentPerformance_p1 = lm(G3 ~ (sex+age+address+famsize+Pstatus+Medu+Fedu+traveltime+studytime+
-#                                   failures+schoolsup+famsup+activities+higher+internet+romantic+
-#                                   famrel+freetime+goout+Dalc+Walc+health+absences), 
-#                           data = studentDataset)
+studentPerformance_p1 = lm(G3 ~ (sex+age+address+famsize+Pstatus+Medu+Fedu+traveltime+studytime+
+                                   failures+schoolsup+famsup+activities+higher+internet+romantic+
+                                   famrel+freetime+goout+Dalc+Walc+health+absences), 
+                           data = studentDataset)
 
-#summary(studentPerformance_p1)
+summary(studentPerformance_p1)
 ```
 
 
 ```{r}
-#subsets = ols_step_forward_p(studentPerformance_fm,p_val = 0.05, details = FALSE)
-#forwardMdl = subsets$model
-#summary(forwardMdl)
+subsets = ols_step_forward_p(studentPerformance_fm,p_val = 0.05, details = FALSE)
+forwardMdl = subsets$model
+summary(forwardMdl)
 ```
 
 ```{r}
-#bestSubsetMdl = ols_step_best_subset(forwardMdl, details = FALSE)
-#(bestSubsetMdl$metrics)
+bestSubsetMdl = ols_step_best_subset(forwardMdl, details = FALSE)
+(bestSubsetMdl$metrics)
 ```
 
 ```{r}
-#studentPerformance_p2 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Medu+Dalc+famsize+freetime+goout+health), 
- #                          data = studentDataset)
+studentPerformance_p2 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Medu+Dalc+famsize+freetime+goout+health), 
+                           data = studentDataset)
 
-#summary(studentPerformance_p2)
+summary(studentPerformance_p2)
 ```
 
 ```{r}
-#studentPerformance_p3 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+freetime+goout+health), 
-#                           data = studentDataset)
+studentPerformance_p3 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+freetime+goout+health), 
+                           data = studentDataset)
 
-#summary(studentPerformance_p3)
+summary(studentPerformance_p3)
 ```
 
 ```{r}
-#studentPerformance_p4 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health), 
-#                           data = studentDataset)
+studentPerformance_p4 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health), 
+                           data = studentDataset)
 
-#summary(studentPerformance_p4)
+summary(studentPerformance_p4)
 ```
 
 ```{r}
-#forwardMdl_int = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health)^2, data = studentDataset)
-#summary(forwardMdl_int)
+forwardMdl_int = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health)^2, data = studentDataset)
+summary(forwardMdl_int)
 ```
 
 
 ```{r}
-#forwardMdl_int1 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health+failures:schoolsup+higher:studytime+schoolsup:goout+schoolsup:health+school:studytime+school:goout+studytime:goout+studytime:health+Dalc:goout), data = studentDataset)
-#summary(forwardMdl_int1)
+forwardMdl_int1 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health+failures:schoolsup+higher:studytime+schoolsup:goout+schoolsup:health+school:studytime+school:goout+studytime:goout+studytime:health+Dalc:goout), data = studentDataset)
+summary(forwardMdl_int1)
 ```
 
 ```{r}
-#anova(studentPerformance_p4,forwardMdl_int1)
+anova(studentPerformance_p4,forwardMdl_int1)
 ```
 
 
@@ -629,116 +569,116 @@ $$
 
 ```{r}
 #Linearity Assumption
-#library(ggplot2)
-#ggplot(forwardMdl_int1, aes(x=.fitted, y=.resid)) +
-#geom_point() +geom_smooth()+
-#geom_hline(yintercept = 0)
+library(ggplot2)
+ggplot(forwardMdl_int1, aes(x=.fitted, y=.resid)) +
+geom_point() +geom_smooth()+
+geom_hline(yintercept = 0)
 ```
 
 ```{r}
 # Equal Variance Assumption
 
-#ggplot(forwardMdl_int1, aes(x=.fitted, y=.resid)) +
-#geom_point(colour = "purple") +
-#geom_hline(yintercept = 0) +
-#geom_smooth(colour = "green4")+
-#ggtitle("Residual plot: Residual vs Fitted values")
+ggplot(forwardMdl_int1, aes(x=.fitted, y=.resid)) +
+geom_point(colour = "purple") +
+geom_hline(yintercept = 0) +
+geom_smooth(colour = "green4")+
+ggtitle("Residual plot: Residual vs Fitted values")
 ```
 
 ```{r}
-#ggplot(forwardMdl_int1, aes(x=.fitted, y=sqrt(abs(.stdresid)))) +
-#geom_point(colour = "purple") +
-#geom_hline(yintercept = 0) +
-#geom_smooth( colour = "green4")+
-#ggtitle("Scale-Location plot : Standardized Residual vs Fitted values")
+ggplot(forwardMdl_int1, aes(x=.fitted, y=sqrt(abs(.stdresid)))) +
+geom_point(colour = "purple") +
+geom_hline(yintercept = 0) +
+geom_smooth( colour = "green4")+
+ggtitle("Scale-Location plot : Standardized Residual vs Fitted values")
 ```
 ```{r}
-#library(lmtest)
+library(lmtest)
 
-#bptest(forwardMdl_int1)  # It doesn't have heteroscedasticity.
+bptest(forwardMdl_int1)  # It doesn't have heteroscedasticity.
 ```
 
 ```{r}
 # Normality Assumption
 
-#ggplot(data=studentDataset, aes(residuals(forwardMdl_int1))) +
-#geom_histogram(breaks = seq(-6,6,by=1), col="green3", fill="green4") +
-#labs(title="Histogram for residuals") +
-#labs(x="residuals", y="Count")
+ggplot(data=studentDataset, aes(residuals(forwardMdl_int1))) +
+geom_histogram(breaks = seq(-6,6,by=1), col="green3", fill="green4") +
+labs(title="Histogram for residuals") +
+labs(x="residuals", y="Count")
 ```
 ```{r}
-#ggplot(studentDataset, aes(sample=forwardMdl_int1$residuals)) +
-#stat_qq() +
-#stat_qq_line()
+ggplot(studentDataset, aes(sample=forwardMdl_int1$residuals)) +
+stat_qq() +
+stat_qq_line()
 ```
 ```{r}
 #Testing for Normality  
-#shapiro.test(residuals(forwardMdl_int1))  # We don't have normality
+shapiro.test(residuals(forwardMdl_int1))  # We don't have normality
 ```
 
 ```{r}
 #Multicollinearity
-#library(mctest)
+library(mctest)
 #pairs(~G3+studytime+goout+health,data=studentDataset)
 ```
 
 
 ```{r}
-#imcdiag(studentPerformance_fm, method="VIF")
+imcdiag(studentPerformance_fm, method="VIF")
 ```
 
 ```{r}
-#forwardMdl_int2 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health+failures:schoolsup+schoolsup:goout+schoolsup:health+school:studytime+school:goout+studytime:health), data = studentDataset)
-#summary(forwardMdl_int2)
+forwardMdl_int2 = lm(G3 ~ (failures+higher+schoolsup+school+romantic+studytime+address+Dalc+famsize+goout+health+failures:schoolsup+schoolsup:goout+schoolsup:health+school:studytime+school:goout+studytime:health), data = studentDataset)
+summary(forwardMdl_int2)
 ```
 
 
 ```{r}
 
-#imcdiag(forwardMdl_int2, method="VIF")
+imcdiag(forwardMdl_int2, method="VIF")
 ```
 
 
 ```{r}
 #Linearity Assumption
-#library(ggplot2)
-#ggplot(forwardMdl_int2, aes(x=.fitted, y=.resid)) +
-#geom_point() +geom_smooth()+
-#geom_hline(yintercept = 0)
+library(ggplot2)
+ggplot(forwardMdl_int2, aes(x=.fitted, y=.resid)) +
+geom_point() +geom_smooth()+
+geom_hline(yintercept = 0)
 ```
 ```{r}
-#ggplot(forwardMdl_int2, aes(x=.fitted, y=sqrt(abs(.stdresid)))) +
-#geom_point(colour = "purple") +
-#geom_hline(yintercept = 0) +
-#geom_smooth( colour = "green4")+
-#ggtitle("Scale-Location plot : Standardized Residual vs Fitted values")
+ggplot(forwardMdl_int2, aes(x=.fitted, y=sqrt(abs(.stdresid)))) +
+geom_point(colour = "purple") +
+geom_hline(yintercept = 0) +
+geom_smooth( colour = "green4")+
+ggtitle("Scale-Location plot : Standardized Residual vs Fitted values")
 ```
 ```{r}
-#library(lmtest)
+library(lmtest)
 
-#bptest(forwardMdl_int2)  # It doesn't have heteroscedasticity.
+bptest(forwardMdl_int2)  # It doesn't have heteroscedasticity.
 ```
 
 ```{r}
 # Normality Assumption
 
-#ggplot(data=studentDataset, aes(residuals(forwardMdl_int2))) +
-#geom_histogram(breaks = seq(-5,5,by=1), col="green3", fill="green4") +
-#labs(title="Histogram for residuals") +
-#labs(x="residuals", y="Count")
+ggplot(data=studentDataset, aes(residuals(forwardMdl_int2))) +
+geom_histogram(breaks = seq(-5,5,by=1), col="green3", fill="green4") +
+labs(title="Histogram for residuals") +
+labs(x="residuals", y="Count")
 ```
 ```{r}
-#ggplot(studentDataset, aes(sample=forwardMdl_int2$residuals)) +
-#stat_qq() +
-#stat_qq_line()
+ggplot(studentDataset, aes(sample=forwardMdl_int2$residuals)) +
+stat_qq() +
+stat_qq_line()
 ```
 ```{r}
 #Testing for Normality  
-#shapiro.test(residuals(forwardMdl_int2))  # We don't have normality
+shapiro.test(residuals(forwardMdl_int2))  # We don't have normality
 ```
 ```{r}
-#qqnorm(studentDataset$G3)
-#qqline(studentDataset$G3, col="red")
+qqnorm(studentDataset$G3)
+qqline(studentDataset$G3, col="red")
 
 ```
 
@@ -746,95 +686,94 @@ $$
 ```{r}
 # Outlier
 
-#plot(forwardMdl_int2,which=5)
+plot(forwardMdl_int2,which=5)
 ```
 ```{r}
-#studentDataset[cooks.distance(forwardMdl_int2)>0.5,]
+studentDataset[cooks.distance(forwardMdl_int2)>0.5,]
 ```
 
 ```{r}
-#plot(forwardMdl_int2,pch=18,col="red",which=c(4))
+plot(forwardMdl_int2,pch=18,col="red",which=c(4))
 ```
 ```{r}
-#fanyi <- function(model,dep) {
-#    coe=coefficients(model)
-#    for(a in names(coe)){
-#      if (coe[a]>0){
-#        print(paste('For one unit increases in ',a,' ',dep,' increases by ', signif(coe[a])))
-#      }else{
-#        print(paste('For one unit increases in ',a,' ',dep,' decreases by ', signif(-1*coe[a])))
-#      }
-#      
-#    }
-#} 
-#fanyi(studentPerformance_fm,'the grade of student')
-#formula <- function(model,dep){
-#  coe=coefficients(model)
-#  b=paste(dep,'=')
-#  for(a in names(coe)){
-#    if (coe[a]>0){
-#      b=paste(b,' +',signif(coe[a]),'(',a,')',sep="")
-#    }else{
-#      b=paste(b,' ',signif(coe[a]),'(',a,')',sep="")
-#    }
+fanyi <- function(model,dep) {
+    coe=coefficients(model)
+    for(a in names(coe)){
+      if (coe[a]>0){
+        print(paste('For one unit increases in ',a,' ',dep,' increases by ', signif(coe[a])))
+      }else{
+        print(paste('For one unit increases in ',a,' ',dep,' decreases by ', signif(-1*coe[a])))
+      }
+      
+    }
+} 
+fanyi(studentPerformance_fm,'the grade of student')
+formula <- function(model,dep){
+  coe=coefficients(model)
+  b=paste(dep,'=')
+  for(a in names(coe)){
+    if (coe[a]>0){
+      b=paste(b,' +',signif(coe[a]),'(',a,')',sep="")
+    }else{
+      b=paste(b,' ',signif(coe[a]),'(',a,')',sep="")
+    }
     
-#  }
-#  print(b)
-#}
-#formula(student_performance_intMdl1,'G3')
+  }
+  print(b)
+}
+formula(student_performance_intMdl1,'G3')
 
 
 
+```{r}
 
-#```{r}
+fanyi <- function(model,dep) {
 
-#fanyi <- function(model,dep) {
+    coe=coefficients(model)
 
-#    coe=coefficients(model)
+    for(a in names(coe)){
 
-#    for(a in names(coe)){
+      if (coe[a]>0){
 
- #     if (coe[a]>0){
+        print(paste('For one unit increases in ',a,' ',dep,' increases by ', signif(coe[a])))
 
-#        print(paste('For one unit increases in ',a,' ',dep,' increases by ', signif(coe[a])))
-#
-#      }else{
+      }else{
 
-#        print(paste('For one unit increases in ',a,' ',dep,' decreases by ', signif(-1*coe[a])))
+        print(paste('For one unit increases in ',a,' ',dep,' decreases by ', signif(-1*coe[a])))
 
-#      }
+      }
 
-#    }
+    }
 
-#} 
+} 
 
-#fanyi(studentPerformance_fm,'the grade of student')
+fanyi(studentPerformance_fm,'the grade of student')
 
-#formula <- function(model,dep){
+formula <- function(model,dep){
 
-#  coe=coefficients(model)
+  coe=coefficients(model)
 
-#  b=paste(dep,'=')
+  b=paste(dep,'=')
 
-#  for(a in names(coe)){
+  for(a in names(coe)){
 
-#    if (coe[a]>0){
+    if (coe[a]>0){
 
-#      b=paste(b,' +',signif(coe[a]),'(',a,')',sep="")
+      b=paste(b,' +',signif(coe[a]),'(',a,')',sep="")
 
-#    }else{
+    }else{
 
-#      b=paste(b,' ',signif(coe[a]),'(',a,')',sep="")
+      b=paste(b,' ',signif(coe[a]),'(',a,')',sep="")
 
-#    }
+    }
 
-#  }
+  }
 
-#  print(b)
+  print(b)
 
-#}
+}
 
-#formula(student_performance_intMdl3,'G3')
+formula(student_performance_intMdl3,'G3')
 
 ```
 
