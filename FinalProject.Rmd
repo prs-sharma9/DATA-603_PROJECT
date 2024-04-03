@@ -695,59 +695,9 @@ studentDataset[cooks.distance(forwardMdl_int2)>0.5,]
 ```{r}
 plot(forwardMdl_int2,pch=18,col="red",which=c(4))
 ```
-```{r}
-fanyi <- function(model,dep) {
-    coe=coefficients(model)
-    for(a in names(coe)){
-      if (coe[a]>0){
-        print(paste('For one unit increases in ',a,' ',dep,' increases by ', signif(coe[a])))
-      }else{
-        print(paste('For one unit increases in ',a,' ',dep,' decreases by ', signif(-1*coe[a])))
-      }
-      
-    }
-} 
-fanyi(studentPerformance_fm,'the grade of student')
-formula <- function(model,dep){
-  coe=coefficients(model)
-  b=paste(dep,'=')
-  for(a in names(coe)){
-    if (coe[a]>0){
-      b=paste(b,' +',signif(coe[a]),'(',a,')',sep="")
-    }else{
-      b=paste(b,' ',signif(coe[a]),'(',a,')',sep="")
-    }
-    
-  }
-  print(b)
-}
-formula(student_performance_intMdl1,'G3')
-
-
 
 ```{r}
 
-fanyi <- function(model,dep) {
-
-    coe=coefficients(model)
-
-    for(a in names(coe)){
-
-      if (coe[a]>0){
-
-        print(paste('For one unit increases in ',a,' ',dep,' increases by ', signif(coe[a])))
-
-      }else{
-
-        print(paste('For one unit increases in ',a,' ',dep,' decreases by ', signif(-1*coe[a])))
-
-      }
-
-    }
-
-} 
-
-fanyi(studentPerformance_fm,'the grade of student')
 
 formula <- function(model,dep){
 
@@ -774,6 +724,67 @@ formula <- function(model,dep){
 }
 
 formula(student_performance_intMdl3,'G3')
+
+```
+```{r}
+fanyi <- function(model,dep,listofcolums) {
+  coe=coefficients(model)
+  inter=data.frame(X=listofcolums)
+  inter$B=''
+  for(a in names(coe)){
+    if (grepl(':',a)){
+      c=strsplit(a,':')[[1]]
+      c[3]=''
+      c[4]=''
+      if(!(c[1] %in% listofcolums)){
+        for (i in listofcolums){
+          if (length(grep(i,c[1])==1)){
+            c[1]=paste('if ',i,' is ',str_remove(string = c[1],pattern = i),sep='')
+            c[3]=i
+          }
+        }
+      }
+      if(!(c[2] %in% listofcolums)){
+        for (i in listofcolums){
+          if (length(grep(i,c[2])==1)){
+            c[2]=paste('if ',i,' is ',str_remove(string = c[2],pattern = i),sep='')
+            c[4]=i
+          }
+        }
+      }
+      if(coe[a]>0){
+        inter[inter$X==c[1]|inter$X==c[3],]$B<-paste(inter[inter$X==c[1]|inter$X==c[3],]$B,'+',signif(coe[a]),'(',c[2],')',sep='')
+        inter[inter$X==c[2]|inter$X==c[4],]$B<-paste(inter[inter$X==c[2]|inter$X==c[4],]$B,'+',signif(coe[a]),'(',c[1],')',sep='')
+      }else{
+        inter[inter$X==c[1]|inter$X==c[3],]$B<-paste(inter[inter$X==c[1]|inter$X==c[3],]$B,signif(coe[a]),'(',c[2],')',sep='')
+        inter[inter$X==c[2]|inter$X==c[4],]$B<-paste(inter[inter$X==c[2]|inter$X==c[4],]$B,signif(coe[a]),'(',c[1],')',sep='')
+      }
+    }else{
+      if (a %in% listofcolums){
+        inter[inter$X==a,]$B<-paste(inter[inter$X==a,]$B,signif(coe[a]),sep = '')
+      }else{
+        for (i in listofcolums){
+          if (length(grep(i,a)==1)){
+            d=str_remove(string = a,pattern = i)
+            if(coe[a]>0){
+              inter[inter$X==i,]$B<-paste(inter[inter$X==i,]$B,'+',signif(coe[a]),'(if ',i,' is ',d,')',sep='')
+            }else{
+              inter[inter$X==i,]$B<-paste(inter[inter$X==i,]$B,signif(coe[a]),'(if ',i,' is ',d,')',sep='')
+            }
+          }
+        }
+      }
+    }
+    
+  }
+  print(inter)
+  for(i in listofcolums){
+    print(paste('For 1 unit increases in\'',i,'\'',dep,'increases by',inter[inter$X==i,]$B))
+  }
+} 
+
+
+fanyi(student_performance_intMdl3,'the grade of student',c('failures','higher','study','schoolsup','Dalc','health','romantic','famsizeLE','goout'))
 
 ```
 
