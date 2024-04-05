@@ -3,8 +3,9 @@ title: "Statistic Model to Analyze Student’s Performance - Group 8"
 author: "Xuchuan Zheng, Sungki Park, Prashant Sharma"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  html_document: default
+  word_document: default
   pdf_document: default
+  html_document: default
 urlcolor: blue
 ---
 
@@ -206,6 +207,7 @@ summary(studentPerformance_fm)
 ```
 
 ```{r}
+# full model vs null model
 studentPerformance_null = lm(G3 ~ 1, 
                            data = studentDataset)
 print(anova(studentPerformance_null,studentPerformance_fm))
