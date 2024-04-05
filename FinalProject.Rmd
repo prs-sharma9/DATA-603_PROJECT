@@ -3,8 +3,8 @@ title: "Statistic Model to Analyze Student’s Performance - Group 8"
 author: "Xuchuan Zheng, Sungki Park, Prashant Sharma"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 urlcolor: blue
 ---
 
@@ -206,8 +206,9 @@ summary(studentPerformance_fm)
 ```
 
 ```{r}
-# Multicolinearity Test
-imcdiag(studentPerformance_fm, method="VIF")
+studentPerformance_null = lm(G3 ~ 1, 
+                           data = studentDataset)
+print(anova(studentPerformance_null,studentPerformance_fm))
 ```
 
 
@@ -240,7 +241,7 @@ summary(student_performance_forwardMdl)
 
 
 ```{r}
-student_performance_addMdl = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize+
+student_performance_addMdl = lm(G3 ~ (failures+higher+studytime+schoolsup+Dalc+health+romantic+famsize
                                       +goout), data = studentDataset)
 summary(student_performance_addMdl)
 ```
@@ -263,6 +264,11 @@ $\widehat {G3}$ = 10.68826-1.82887(failures)+1.54720(higheryes)+0.26960(studytim
 
                       +0.08698(goout5)
 
+
+```{r}
+# the best additive model vs forward procedure
+print(anova(student_performance_addMdl,student_performance_forwardMdl))
+```
 
 
 # Add some comment
@@ -300,13 +306,14 @@ summary(student_performance_intMdl2)
 
 Comparing our additive and interaction models to see which one is better. To verify this we can use partial F-test using below hypothesis:
 
-
-$H_0$ : All the interaction coefficients are not significant
-$H_a$ : At least one of the interaction coefficient is significant
-
+$$
+H_0 : All\ the\ interaction\ coefficients\ are\ not\ significant \\
+H_a : At\ least\ one\ of\ the\ interaction\ coefficient\ is\ significant
+$$
 
 
 ```{r eval=TRUE, echo=FALSE}
+anova(student_performance_addMdl, student_performance_intMdl2)
 anove_addVsint = anova(student_performance_addMdl, student_performance_intMdl2)
 ```
 
@@ -340,6 +347,23 @@ student_performance_intMdl3 = lm(G3 ~ (failures+I(failures^2)+higher+studytime+s
                                  data = studentDataset)
 summary(student_performance_intMdl3)
 ```
+
+```{r eval=TRUE, echo=FALSE}
+# interaction model vs interaction model with higher order term
+anova(student_performance_intMdl2, student_performance_intMdl3)
+```
+
+```{r eval=TRUE, echo=FALSE}
+# best additive model vs interaction model with higher order term
+anova(student_performance_addMdl, student_performance_intMdl3)
+```
+| Source of variation | DF  |  Sum of Square  |  Mean Square  |  F-Statistic|
+|:-------------------:|:---:|:---------------:|:-------------:|:-----------:|
+|   Regression        | 33  |    740.32       |   22.43394    |  1.9433     |
+|   Residual          | 990 |    11429        |   11.54444    |             |
+|   Total             | 1023|    12169        |               |             |
+
+The p-value from our ANOVA test is **2.008e-05** which is less than our assumed $\alpha=0.05$ hence we can reject our $H_0$ and conclude that at least one of our interaction coefficient with higher order is significant.
 
 
 $\widehat{G3}$ = 8.67068((Intercept)) -3.84533(failures) +0.757609(I(failures^2)) +1.49398(higheryes) 
